@@ -2,14 +2,19 @@
 django-closuredag
 =============================
 
-.. image:: https://badge.fury.io/py/django-closuredag.svg
-    :target: https://badge.fury.io/py/django-closuredag
+.. image:: https://img.shields.io/pypi/v/django-closuredag.svg
+        :target: https://pypi.python.org/pypi/django-closuredag
 
 .. image:: https://travis-ci.org/farmlab/django-closuredag.svg?branch=master
-    :target: https://travis-ci.org/farmlab/django-closuredag
+        :target: https://travis-ci.org/farmlab/django-closuredag
+
+.. image:: https://readthedocs.org/projects/django-closuredag/badge/?version=latest
+        :target: https://django-closuredag.readthedocs.io/en/latest
+        :alt: Documentation Status
 
 .. image:: https://codecov.io/gh/farmlab/django-closuredag/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/farmlab/django-closuredag
+
 
 A django model to represent direct acyclic graph coupled with closure table
 
