@@ -95,6 +95,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 
     'closuredag',
-    #'django_dag_test',
+    # 'closuredag_test',
 )
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'

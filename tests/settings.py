@@ -35,10 +35,10 @@ TEMPLATES = [
 ]
 
 INSTALLED_APPS = [
+    "closuredag",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sites",
-    "closuredag",
 ]
 
 SITE_ID = 1

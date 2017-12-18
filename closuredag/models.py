@@ -6,8 +6,8 @@ Directed Acyclic Graph structure.
 """
 
 from django.db import models
-from django.core.exceptions import ValidationError
 
+from django.core.exceptions import ValidationError
 from closuredag.exceptions import VertexNotReachableException
 
 
@@ -19,11 +19,8 @@ class VertexBase(object):
     class Meta:
         ordering = ('-id', )
 
-    def __unicode__(self):
-        return u"# %s" % self.pk
-
     def __str__(self):
-        return self.__unicode__()
+        return "# {0}".format(self.pk)
 
     def add_child(self, descendant, **kwargs):
         """
@@ -60,25 +57,25 @@ class VertexBase(object):
         """
         return self.__class__.objects.filter(children=self)
 
-    def descendants_tree(self):
+    def descendants_graph(self):
         """
-        Returns a tree-like structure with progeny
+        Returns a graph-like structure with progeny
         TODO: This one as to be improved to be more efficient. make a lot of query on big graph
         """
-        tree = {}
+        graph = {}
         for f in self.children.all():
-            tree[f] = f.descendants_tree()
-        return tree
+            graph[f] = f.descendants_graph()
+        return graph
 
-    def ancestors_tree(self):
+    def ancestors_graph(self):
         """
-        Returns a tree-like structure with ancestors
+        Returns a graph-like structure with ancestors
         TODO: This one as to be improved to be more efficient. make a lot of query on big graph
         """
-        tree = {}
+        graph = {}
         for f in self.parents():
-            tree[f] = f.ancestors_tree()
-        return tree
+            graph[f] = f.ancestors_graph()
+        return graph
 
     def descendants_set(self, cached_results=None):
         """
@@ -146,15 +143,15 @@ class VertexBase(object):
             cached_results[self] = res
             return res
 
-    def vertexs_set(self):
+    def vertices_set(self):
         """
-        Retrun a set of all vertexs
+        Retrun a set of all vertices
         """
-        vertexs = set()
-        vertexs.add(self)
-        vertexs.update(self.ancestors_set())
-        vertexs.update(self.descendants_set())
-        return vertexs
+        vertices = set()
+        vertices.add(self)
+        vertices.update(self.ancestors_set())
+        vertices.update(self.descendants_set())
+        return vertices
 
     def edges_set(self):
         """
@@ -223,9 +220,9 @@ class VertexBase(object):
 
     def get_roots(self):
         """
-        Returns roots vertexs, if any
+        Returns roots vertices, if any
         """
-        at = self.ancestors_tree()
+        at = self.ancestors_graph()
         roots = set()
         for a in at:
             roots.update(a._get_roots(at[a]))
@@ -244,9 +241,9 @@ class VertexBase(object):
 
     def get_leaves(self):
         """
-        Returns leaves vertexs, if any
+        Returns leave vertex, if any
         """
-        dt = self.descendants_tree()
+        dt = self.descendants_graph()
         leaves = set()
         for d in dt:
             leaves.update(d._get_leaves(dt[d]))

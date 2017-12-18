@@ -16,11 +16,7 @@ def edge_factory(vertex_model,
     """
     Dag Edge factory
     """
-    try:
-        basestring
-    except NameError:
-        basestring = str
-    if isinstance(vertex_model, basestring):
+    if isinstance(vertex_model, str):
         try:
             vertex_model_name = vertex_model.split('.')[1]
         except IndexError:
@@ -28,27 +24,30 @@ def edge_factory(vertex_model,
     else:
         vertex_model_name = vertex_model._meta.model_name
 
+
     class Edge(base_model):
         class Meta:
             abstract = not concrete
 
         parent = models.ForeignKey(
             vertex_model,
-            related_name="%s_child" % vertex_model_name,
-            to_field=parent_to_field)
+            related_name="{0}_child".format(vertex_model_name),
+            to_field=parent_to_field, 
+            on_delete=models.CASCADE)
         child = models.ForeignKey(
             vertex_model,
-            related_name="%s_parent" % vertex_model_name,
-            to_field=child_to_field)
+            related_name="{0}_parent".format(vertex_model_name),
+            to_field=child_to_field,
+            on_delete=models.CASCADE)
 
-        def __unicode__(self):
-            return u"%s is child of %s" % (self.child, self.parent)
+
+        def __str__(self):
+            return "{0} is child of {1}".format(self.child, self.parent)
 
         def save(self, *args, **kwargs):
             if not kwargs.pop('disable_circular_check', False):
                 self.parent.__class__.circular_checker(self.parent, self.child)
-            super(Edge, self).save(*args,
-                                   **kwargs)  # Call the "real" save() method.
+            super(Edge, self).save(*args, **kwargs)
 
     return Edge
 

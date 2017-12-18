@@ -1,4 +1,4 @@
-expected_tree_output = '''# 1
+expected_graph_output = '''# 1
 Descendants:
 # 5
 # 7

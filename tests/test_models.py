@@ -14,7 +14,7 @@ from django.shortcuts import render_to_response
 from django.core.exceptions import ValidationError
 
 from closuredag.factories import vertex_factory, edge_factory
-from tests.tree_test_output import expected_tree_output
+from tests.graph_test_output import expected_graph_output
 
 
 class ConcreteVertex(vertex_factory('ConcreteEdge')):
@@ -40,7 +40,7 @@ class ConcreteEdge(edge_factory('ConcreteVertex', concrete=False)):
         app_label = 'closuredag'
 
 
-class ClusuredagTestCase(TestCase):
+class ClosuredagTestCase(TestCase):
     def setUp(self):
         for i in range(1, 11):
             ConcreteVertex(name="%s" % i).save()
@@ -59,12 +59,12 @@ class ClusuredagTestCase(TestCase):
         p1.add_child(p5)
         p5.add_child(p7)
 
-        tree = p1.descendants_tree()
+        graph = p1.descendants_graph()
         # {<ConcreteVertex: # 5>: {<ConcreteVertex: # 7>: {}}}
-        self.assertIn(p5, tree)
-        self.assertEqual(len(tree), 1)
-        self.assertIn(p7, tree[p5])
-        self.assertEqual(tree[p5][p7], {})
+        self.assertIn(p5, graph)
+        self.assertEqual(len(graph), 1)
+        self.assertIn(p7, graph[p5])
+        self.assertEqual(graph[p5][p7], {})
 
         l = [p.pk for p in p1.descendants_set()]
         l.sort()
@@ -101,16 +101,16 @@ class ClusuredagTestCase(TestCase):
         except ValidationError as e:
             self.assertEqual(e.message, 'The object is an ancestor.')
 
-        tree = p1.descendants_tree()
-        self.assertIn(p5, tree)
-        self.assertIn(p6, tree)
-        self.assertIn(p7, tree[p5])
-        self.assertIn(p7, tree[p6])
-        self.assertIn(p8, tree[p6])
-        self.assertIn(p9, tree[p6])
-        self.assertEqual(len(tree), 2)
-        self.assertEqual(len(tree[p5]), 1)
-        self.assertEqual(len(tree[p6]), 3)
+        graph = p1.descendants_graph()
+        self.assertIn(p5, graph)
+        self.assertIn(p6, graph)
+        self.assertIn(p7, graph[p5])
+        self.assertIn(p7, graph[p6])
+        self.assertIn(p8, graph[p6])
+        self.assertIn(p9, graph[p6])
+        self.assertEqual(len(graph), 2)
+        self.assertEqual(len(graph[p5]), 1)
+        self.assertEqual(len(graph[p6]), 3)
 
         l = [p.pk for p in p1.descendants_set()]
         l.sort()
@@ -156,10 +156,10 @@ class ClusuredagTestCase(TestCase):
         self.assertFalse(p1 in p6.ancestors_set())
 
         # Testing the view
-        response = render_to_response('tree.html',
+        response = render_to_response('graph.html',
                                       {'dag_list': ConcreteVertex.objects.all()})
         self.assertEqual(
-            response.content.decode('utf-8'), expected_tree_output)
+            response.content.decode('utf-8'), expected_graph_output)
 
     def test_03_deep_dag(self):
         """
