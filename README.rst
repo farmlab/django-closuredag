@@ -23,6 +23,9 @@ Documentation
 
 The full documentation is at https://django-closuredag.readthedocs.io.
 
+The objective is to develop a reusable django app to represent direct acyclic graph coupled with closure table (see: closure_DAG_concept_ ). It should combine feature provided by django-DAG and django-closuretree.
+
+
 Quickstart
 ----------
 
@@ -77,5 +80,6 @@ Tools used in rendering this package:
 *  Cookiecutter_
 *  `cookiecutter-djangopackage`_
 
+.. _closure_DAG_concept: https://www.codeproject.com/Articles/22824/A-Model-to-Represent-Directed-Acyclic-Graphs-DAG-o 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage

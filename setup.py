@@ -11,7 +11,7 @@ except ImportError:
 
 
 def get_version(*file_paths):
-    """Retrieves the version from django_closuredag/__init__.py"""
+    """Retrieves the version from closuredag/__init__.py"""
     filename = os.path.join(os.path.dirname(__file__), *file_paths)
     version_file = open(filename).read()
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
@@ -21,7 +21,7 @@ def get_version(*file_paths):
     raise RuntimeError('Unable to find version string.')
 
 
-version = get_version("django_closuredag", "__init__.py")
+version = get_version("closuredag", "__init__.py")
 
 
 if sys.argv[-1] == 'publish':
@@ -53,7 +53,7 @@ setup(
     author_email='jerome.dury@flyingsheep.fr',
     url='https://github.com/farmlab/django-closuredag',
     packages=[
-        'django_closuredag',
+        'closuredag',
     ],
     include_package_data=True,
     install_requires=[],
