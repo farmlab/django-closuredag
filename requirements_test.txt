@@ -6,3 +6,6 @@ codecov>=2.0.0
 
 
 # Additional test requirements go here
+
+# for the demo
+django-model-utils

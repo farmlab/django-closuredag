@@ -4,8 +4,10 @@ Factories to build Vertex and Edge model for Directed Acyclic Graph structure.
 
 """
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from closuredag.models import VertexBase
+from closuredag.managers import VertexManager
 
 
 def edge_factory(vertex_model,
@@ -58,8 +60,13 @@ def vertex_factory(edge_model, children_null=True, base_model=models.Model):
     """
 
     class Vertex(base_model, VertexBase):
-        class Meta:
-            abstract = True
+        """
+        An abstract Vertex class that provides a manager to deal with heterogenous sub vertex class.
+    
+        For use in trees of inherited models, to be able to downcast
+        parent instances to their child types.
+    
+        """       
 
         children = models.ManyToManyField(
             'self',
@@ -67,5 +74,10 @@ def vertex_factory(edge_model, children_null=True, base_model=models.Model):
             symmetrical=False,
             through=edge_model,
             related_name='_parents')  # VertexBase.parents() is a function
+        
+        objects = VertexManager()
+
+        class Meta:
+            abstract= True
 
     return Vertex

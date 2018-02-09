@@ -6,9 +6,10 @@ Directed Acyclic Graph structure.
 """
 
 from django.db import models
-
 from django.core.exceptions import ValidationError
 from closuredag.exceptions import VertexNotReachableException
+
+
 
 
 class VertexBase(object):
