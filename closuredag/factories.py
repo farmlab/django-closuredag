@@ -3,16 +3,20 @@
 Factories to build Vertex and Edge model for Directed Acyclic Graph structure.
 
 """
-
+from django.db import connection
+from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from closuredag.models import VertexBase
+
+from closuredag.models import VertexBase, EdgeBase
+from closuredag.signals import add_closure_edge
 from closuredag.managers import VertexManager
 
+import logging
+logger = logging.getLogger(__name__)
 
 def edge_factory(vertex_model,
-                 child_to_field="id",
-                 parent_to_field="id",
+                 vertex_to_field="id",
                  concrete=True,
                  base_model=models.Model):
     """
@@ -27,29 +31,30 @@ def edge_factory(vertex_model,
         vertex_model_name = vertex_model._meta.model_name
 
 
-    class Edge(base_model):
-        class Meta:
-            abstract = not concrete
+    class Edge(EdgeBase, base_model):
 
         parent = models.ForeignKey(
             vertex_model,
             related_name="{0}_child".format(vertex_model_name),
-            to_field=parent_to_field, 
+            to_field=vertex_to_field, 
             on_delete=models.CASCADE)
         child = models.ForeignKey(
             vertex_model,
             related_name="{0}_parent".format(vertex_model_name),
-            to_field=child_to_field,
+            to_field=vertex_to_field,
             on_delete=models.CASCADE)
 
+        class Meta:
+            abstract = not concrete
 
         def __str__(self):
             return "{0} is child of {1}".format(self.child, self.parent)
-
+        
         def save(self, *args, **kwargs):
-            if not kwargs.pop('disable_circular_check', False):
-                self.parent.__class__.circular_checker(self.parent, self.child)
+            # if not kwargs.pop('disable_circular_check', False):
+            self.parent.__class__.circular_checker(self.parent, self.child)
             super(Edge, self).save(*args, **kwargs)
+
 
     return Edge
 
@@ -73,7 +78,7 @@ def vertex_factory(edge_model, children_null=True, base_model=models.Model):
             blank=children_null,
             symmetrical=False,
             through=edge_model,
-            related_name='_parents')  # VertexBase.parents() is a function
+            related_name='parents') 
         
         objects = VertexManager()
 

@@ -9,7 +9,11 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from closuredag.exceptions import VertexNotReachableException
 
+from . import app_settings
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class VertexBase(object):
@@ -51,12 +55,6 @@ class VertexBase(object):
         Removes a parent
         """
         parent.children.through.objects.get(parent=parent, child=self).delete()
-
-    def parents(self):
-        """
-        Returns all elements which have 'self' as a direct descendant
-        """
-        return self.__class__.objects.filter(children=self)
 
     def descendants_graph(self):
         """
@@ -104,7 +102,7 @@ class VertexBase(object):
             return cached_results[self]
         else:
             res = set()
-            for f in self.parents():
+            for f in self.parents.all():
                 res.add(f)
                 res.update(f.ancestors_set(cached_results=cached_results))
             cached_results[self] = res
@@ -137,7 +135,7 @@ class VertexBase(object):
             return cached_results[self]
         else:
             res = set()
-            for f in self.parents():
+            for f in self.parents:
                 res.add((f, self))
                 res.update(
                     f.ancestors_edges_set(cached_results=cached_results))
@@ -259,3 +257,49 @@ class VertexBase(object):
             raise ValidationError('Self links are not allowed.')
         if child in parent.ancestors_set():
             raise ValidationError('The object is an ancestor.')
+
+
+class EdgeBase(models.Model):
+    __old_child_id = None
+    __old_parent_id = None
+    #Closure attribute see: https://www.codeproject.com/Articles/22824/A-Model-to-Represent-Directed-Acyclic-Graphs-DAG-o?msg=2449056
+    # NOTE: Working with foreign key is to heavy, in particular in the admin interface
+    # entry_edge = models.ForeignKey(
+        # 'self',
+        # related_name="entries_edges",
+        # on_delete=models.CASCADE,
+        # null=True, blank=True)
+    # direct_edge = models.ForeignKey(
+        # 'self',
+        # related_name="directs_edges",
+        # on_delete=models.CASCADE,
+        # null=True, blank=True)
+    # exit_edge = models.ForeignKey(
+        # 'self',
+        # related_name="exits_edges",
+        # on_delete=models.CASCADE,
+        # null=True, blank=True)
+    entry_edge_id = models.IntegerField(null=True, blank=True)
+    direct_edge_id = models.IntegerField(null=True, blank=True)
+    exit_edge_id = models.IntegerField(null=True, blank=True)
+    hops = models.IntegerField(default=0)
+    etype = models.CharField(max_length=20, default="direct")
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super(EdgeBase, self).__init__(*args, **kwargs)
+        if self.parent_id:
+            self.__old_parent_id = self.parent.id 
+        if self.child_id:
+            self.__old_child_id = self.child.id
+   
+    def save(self, *arg, **kwargs):
+        super(EdgeBase, self).save()
+
+    def parent_has_changed(self):
+        return self.parent_id != self.__old_parent_id
+    
+    def child_has_changed(self):
+        return self.child_id != self.__old_child_id

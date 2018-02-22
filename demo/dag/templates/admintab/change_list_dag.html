@@ -1,0 +1,31 @@
+
+{% load static %}
+
+<svg id="graph" width=900>
+    <g/>
+</svg>
+
+<script>
+
+
+document.addEventListener("DOMContentLoaded", function(event) { 
+    var G = {{ graph | safe }};
+    
+    // Reload when tab change
+    document.getElementById('admintab2')
+        .addEventListener("change", function(e){
+            make_graph(G);
+        });
+    
+    // Reload when page reload (on filtering...)
+    var isChecked= document.getElementById('admintab2').checked;
+    if(isChecked)
+    {
+        make_graph(G);
+    }
+});
+</script>
+
+
+
+

@@ -1,0 +1,30 @@
+
+svg#graph{
+    width: 100%;
+    /*background: #ddd;*/
+}
+
+g.repro > rect {
+  fill: #ACC280;
+}
+
+g.n1 > rect {
+  fill: #FBBE5E;
+}
+
+text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 12px;
+}
+.node rect {
+  stroke: #999;
+  fill: #fff;
+  stroke-width: 1.5px;
+}
+.edgePath path {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill:none;
+}
+
