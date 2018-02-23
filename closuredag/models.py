@@ -6,7 +6,8 @@ Directed Acyclic Graph structure.
 """
 
 from django.db import models
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError 
+from django.db.models.fields.related import ManyToManyField
 from closuredag.exceptions import VertexNotReachableException
 
 from . import app_settings
@@ -16,7 +17,27 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class VertexBase(object):
+class ToDictMixin(object):
+    """Convert instance to dictionnary
+    see:   https://stackoverflow.com/questions/21925671/convert-django-model-object-to-dict-with-all-of-the-fields-intact
+    """
+
+    def to_dict(self):
+        opts = self._meta
+        data = {}
+        for f in opts.concrete_fields + opts.many_to_many:
+            if isinstance(f, ManyToManyField):
+                if self.pk is None:
+                    data[f.name] = []
+                else:
+                    data[f.name] = list(f.value_from_object(self).values_list('pk', flat=True))
+            else:
+                data[f.name] = f.value_from_object(self)
+        return data
+
+
+
+class VertexBase(ToDictMixin):
     """
     Main vertex abstract model
     """
@@ -76,21 +97,22 @@ class VertexBase(object):
             graph[f] = f.ancestors_graph()
         return graph
 
-    def descendants_set(self, cached_results=None):
+    def descendants(self, cached_results=None):
         """
-        Returns a set of descendants
+        Returns a queryset of descendants
         """
-        if cached_results is None:
-            cached_results = dict()
-        if self in cached_results.keys():
-            return cached_results[self]
-        else:
-            res = set()
-            for f in self.children.all():
-                res.add(f)
-                res.update(f.descendants_set(cached_results=cached_results))
-            cached_results[self] = res
-            return res
+        return self.objects.filter(children=self).distinct()
+        # if cached_results is None:
+            # cached_results = dict()
+        # if self in cached_results.keys():
+            # return cached_results[self]
+        # else:
+            # res = set()
+            # for f in self.children.all():
+                # res.add(f)
+                # res.update(f.descendants_set(cached_results=cached_results))
+            # cached_results[self] = res
+            # return res
 
     def ancestors_set(self, cached_results=None):
         """
@@ -161,93 +183,99 @@ class VertexBase(object):
         edges.update(self.ancestors_edges_set())
         return edges
 
-    def distance(self, target):
-        """
-        Returns the shortest hops count to the target vertex
-        """
-        return len(self.path(target))
+    # def distance(self, target):
+        # """
+        # Returns the shortest hops count to the target vertex
+        # """
+        # return len(self.path(target))
 
-    def path(self, target):
-        """
-        Returns the shortest path
-        """
-        if self == target:
-            return []
-        if target in self.children.all():
-            return [target]
-        if target in self.descendants_set():
-            path = None
-            for d in self.children.all():
-                try:
-                    desc_path = d.path(target)
-                    if not path or len(desc_path) < len(path):
-                        path = [d] + desc_path
-                except VertexNotReachableException:
-                    pass
-        else:
-            raise VertexNotReachableException
-        return path
+    # def path(self, target):
+        # """
+        # Returns the shortest path
+        # """
+        # if self == target:
+            # return []
+        # if target in self.children.all():
+            # return [target]
+        # if target in self.descendants_set():
+            # path = None
+            # for d in self.children.all():
+                # try:
+                    # desc_path = d.path(target)
+                    # if not path or len(desc_path) < len(path):
+                        # path = [d] + desc_path
+                # except VertexNotReachableException:
+                    # pass
+        # else:
+            # raise VertexNotReachableException
+        # return path
 
-    def is_root(self):
-        """
-        Check if has children and not ancestors
-        """
-        return bool(self.children.exists() and not self._parents.exists())
+    # def is_root(self):
+        # """
+        # Check if has children and not ancestors
+        # """
+        # return bool(self.children.exists() and not self._parents.exists())
 
-    def is_leaf(self):
-        """
-        Check if has ancestors and not children
-        """
-        return bool(self._parents.exists() and not self.children.exists())
+    # def is_leaf(self):
+        # """
+        # Check if has ancestors and not children
+        # """
+        # return bool(self._parents.exists() and not self.children.exists())
 
-    def is_island(self):
-        """
-        Check if has no ancestors nor children
-        """
-        return bool(not self.children.exists() and not self._parents.exists())
+    # def is_island(self):
+        # """
+        # Check if has no ancestors nor children
+        # """
+        # return bool(not self.children.exists() and not self._parents.exists())
 
-    def _get_roots(self, at):
-        """
-        Works on objects: no queries
-        """
-        if not at:
-            return set([self])
-        roots = set()
-        for a2 in at:
-            roots.update(a2._get_roots(at[a2]))
-        return roots
+    # def _get_roots(self, at):
+        # """
+        # Works on objects: no queries
+        # """
+        # if not at:
+            # return set([self])
+        # roots = set()
+        # for a2 in at:
+            # roots.update(a2._get_roots(at[a2]))
+        # return roots
 
-    def get_roots(self):
-        """
-        Returns roots vertices, if any
-        """
-        at = self.ancestors_graph()
-        roots = set()
-        for a in at:
-            roots.update(a._get_roots(at[a]))
-        return roots
+    # def get_roots(self):
+        # """
+        # Returns roots vertices, if any
+        # """
+        # at = self.ancestors_graph()
+        # roots = set()
+        # for a in at:
+            # roots.update(a._get_roots(at[a]))
+        # return roots
 
-    def _get_leaves(self, dt):
-        """
-        Works on objects: no queries
-        """
-        if not dt:
-            return set([self])
-        leaves = set()
-        for d2 in dt:
-            leaves.update(d2._get_leaves(dt[d2]))
-        return leaves
+    # def _get_leaves(self, dt):
+        # """
+        # Works on objects: no queries
+        # """
+        # if not dt:
+            # return set([self])
+        # leaves = set()
+        # for d2 in dt:
+            # leaves.update(d2._get_leaves(dt[d2]))
+        # return leaves
 
-    def get_leaves(self):
-        """
-        Returns leave vertex, if any
-        """
-        dt = self.descendants_graph()
-        leaves = set()
-        for d in dt:
-            leaves.update(d._get_leaves(dt[d]))
-        return leaves
+    # def get_leaves(self):
+        # """
+        # Returns leave vertex, if any
+        # """
+        # dt = self.descendants_graph()
+        # leaves = set()
+        # for d in dt:
+            # leaves.update(d._get_leaves(dt[d]))
+        # return leaves
+    
+    # def to_dict(self):
 
+        # return self.__dict__
+   
+
+    
     @staticmethod
     def circular_checker(parent, child):
         """
@@ -259,7 +287,7 @@ class VertexBase(object):
             raise ValidationError('The object is an ancestor.')
 
 
-class EdgeBase(models.Model):
+class EdgeBase(ToDictMixin, models.Model):
     __old_child_id = None
     __old_parent_id = None
     #Closure attribute see: https://www.codeproject.com/Articles/22824/A-Model-to-Represent-Directed-Acyclic-Graphs-DAG-o?msg=2449056
@@ -291,15 +319,18 @@ class EdgeBase(models.Model):
     def __init__(self, *args, **kwargs):
         super(EdgeBase, self).__init__(*args, **kwargs)
         if self.parent_id:
-            self.__old_parent_id = self.parent.id 
+            self.__old_parent_id = self.parent_id  # not self.parent.id to avoid extra query 
         if self.child_id:
-            self.__old_child_id = self.child.id
-   
-    def save(self, *arg, **kwargs):
-        super(EdgeBase, self).save()
+            self.__old_child_id = self.child_id # idem as above
 
     def parent_has_changed(self):
-        return self.parent_id != self.__old_parent_id
+        if self.__old_parent_id:
+            return self.parent_id != self.__old_parent_id
+        else:
+            False
     
     def child_has_changed(self):
-        return self.child_id != self.__old_child_id
+        if self.__old_child_id:
+            return self.child_id != self.__old_child_id
+        else:
+            False

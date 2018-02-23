@@ -1,20 +1,20 @@
 
 
-function make_graph(G)
+function make_graph(G, idDiv)
 {
     var g = new dagreD3.graphlib.Graph().setGraph({});
-
+    unselectedN = "fill:#ddd; stroke:#ddd"
     //nodes
     G.nodes.forEach( function(n){
-        console.log(n.href);
         href = "<a href="+n.href+">"+n.name+"</a>"
         opt = {
             labelType:'html',
-            label: href,
+            label: n.selected != true ? n.name : href,
             href:n.href,
             rx:5,
             ry:5,
             class: n.type == "nodeone" ? "n1" : "repro"  ,
+            style: n.selected != true ? unselectedN : "" 
         }
         g.setNode(n.id, opt)
     });
@@ -25,12 +25,12 @@ function make_graph(G)
 
     G.edges.forEach( function(e){
         opt = {
-            label:e.id,
+            //label:e.id,
             curve: d3.curveBasis,
             style: e.etype == "direct" ? directE : generatedE  ,
-            labelStyle: "font-style: italic; font-size: 11px;"
+            //labelStyle: "font-style: italic; font-size: 11px;"
         }
-        g.setEdge(e.from, e.to, opt)
+        g.setEdge(e.parent, e.child, opt)
     });
 
 
@@ -38,8 +38,9 @@ function make_graph(G)
     var render = new dagreD3.render();
 
     // Set up an SVG group so that we can translate the final graph.
-    var svg = d3.select("svg#graph")
-    d3.select("svg g").remove();
+    var div = "svg#".concat(idDiv);
+    var svg = d3.select(div);
+    d3.select(div.concat(" g")).remove();
     var inner = svg.append("g");
 
     // zoom

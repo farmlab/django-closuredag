@@ -1,8 +1,13 @@
+import json
+
 from django.conf.urls import url
 from django.contrib import admin
 from django.utils.translation import ugettext as _
 
 from admintab.admin import ChangeListAdminMixin as ChangeListAdmin
+
+from closuredag.admin import EdgeAdminMixin, VertexAdminMixin
+
 
 from .models import Node, Relation, NodeOne, NodeTwo
 
@@ -14,30 +19,23 @@ logger = logging.getLogger("admin")
 class RelationAdmin(admin.ModelAdmin):
     list_display=['__str__', 'id', 'etype']
 
-class EdgeParentAdminInline(admin.TabularInline):
+class EdgeParentAdminInline(EdgeAdminMixin, admin.TabularInline):
     model = Relation
     fk_name = 'child'
     extra = 1
     verbose_name = "Parent"
     verbose_name_plural = "Parents"
-    
-    def get_queryset(self, request):
-        qs = super(EdgeParentAdminInline, self).get_queryset(request)
-        return qs.filter(etype="direct")
 
-class EdgeChildAdminInline(admin.TabularInline):
+
+class EdgeChildAdminInline(EdgeAdminMixin, admin.TabularInline):
     model = Relation
     fk_name = 'parent'
     extra = 1
     verbose_name = _("Child")
     verbose_name_plural = _("Children")
-    
-    def get_queryset(self, request):
-        qs = super(EdgeChildAdminInline, self).get_queryset(request)
-        return qs.filter(etype="direct")
 
 
-class AbsctractNodeAdmin(admin.ModelAdmin):
+class AbsctractNodeAdmin(VertexAdminMixin, admin.ModelAdmin):
     inlines = [EdgeParentAdminInline, EdgeChildAdminInline]
 
 
@@ -52,14 +50,19 @@ class NodeAdmin(AbsctractNodeAdmin, ChangeListAdmin):
     list_filter = ["name", "value_one"]
     change_list_tab = [ 
             ("Table", "admintab/admin/change_list_base.html"),
-            ("DAG", "admintab/change_list_dag.html")
+            ("DAG", "admintab/change_list_dag.html"),
+            ("DAGFULL", "admintab/change_list_dagfull.html")
             ]
 
+    
     def changelisttab(self, request, context):
         qs = context["cl"].queryset
         # draw graph
-        G = qs.graph()
-        context["graph"] = G
+        G = qs.fullgraph()
+        context["graph"] = json.dumps(G)
+        
+        GF = qs.complete_graph()
+        context["fullgraph"] = json.dumps(GF)
         
         # qs.dot()
         return request, context

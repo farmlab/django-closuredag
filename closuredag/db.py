@@ -13,28 +13,28 @@ def sql_to_add(table):
     if ENGINE == POSTGRES:
         from psycopg2 import sql
         return sql.SQL("""
-            INSERT INTO {0}(entry_edge_id, direct_edge_id, exit_edge_id, parent_id, child_id, hops, etype, value_rel)
             
             -- Incoming edges.
-            SELECT id as entry_edge_id, %(newEdgeId)s as direct_edge_id, %(newEdgeId)s AS exit_edge_id, dr.parent_id AS parent_id, %(nodeTo)s AS child_id, dr.hops + 1 AS hops, 'in' AS etype, 999 AS value_rel
+            INSERT INTO {0}(entry_edge_id, direct_edge_id, exit_edge_id, parent_id, child_id, hops, etype)
+            SELECT id as entry_edge_id, %(newEdgeId)s as direct_edge_id, %(newEdgeId)s AS exit_edge_id, dr.parent_id AS parent_id, %(nodeTo)s AS child_id, dr.hops + 1 AS hops, 'in' AS etype
             FROM {0} as dr
-            WHERE dr.child_id = %(nodeFrom)s
+            WHERE dr.child_id = %(nodeFrom)s;
 
-            UNION
 
             -- Outcoming edges.
-            SELECT %(newEdgeId)s as entry_edge_id, %(newEdgeId)s as direct_edge_id, id AS exit_edge_id, %(nodeFrom)s AS parent_id, dr.child_id AS child_id, dr.hops + 1 AS hops, 'out' AS etype, 999 AS value_rel
+            INSERT INTO {0}(entry_edge_id, direct_edge_id, exit_edge_id, parent_id, child_id, hops, etype)
+            SELECT %(newEdgeId)s as entry_edge_id, %(newEdgeId)s as direct_edge_id, id AS exit_edge_id, %(nodeFrom)s AS parent_id, dr.child_id AS child_id, dr.hops + 1 AS hops, 'out' AS etype
             FROM {0} as dr
-            WHERE dr.parent_id = %(nodeTo)s
+            WHERE dr.parent_id = %(nodeTo)s;
 
-            UNION
 
             -- Incoming to outgoing.
-                SELECT drA.id as entry_edge_id, %(newEdgeId)s as direct_edge_id, drB.id AS exit_edge_id, drA.parent_id AS parent_id, drB.child_id AS child_id, drA.hops + drB.hops + 1 AS hops, 'inout' AS etype, 999 AS value_rel
+            INSERT INTO {0}(entry_edge_id, direct_edge_id, exit_edge_id, parent_id, child_id, hops, etype)
+                SELECT drA.id as entry_edge_id, %(newEdgeId)s as direct_edge_id, drB.id AS exit_edge_id, drA.parent_id AS parent_id, drB.child_id AS child_id, drA.hops + drB.hops + 1 AS hops, 'inout' AS etype
                 FROM {0} AS drA
                 CROSS JOIN {0} drB
                 WHERE drA.child_id = %(nodeFrom)s
-                AND drB.parent_id = %(nodeFrom)s
+                AND drB.parent_id = %(nodeTo)s;
                 """).format(sql.Identifier(table))
     else:
         return None
@@ -67,7 +67,8 @@ def sql_to_delete(table):
                 UNION
                 	SELECT dr.id
                 	FROM {0} as dr
-                	INNER JOIN purge ON dr.entry_edge_id = purge.id AND dr.exit_edge_id = purge.id
+                	INNER JOIN purge ON dr.entry_edge_id = purge.id 
+                        AND dr.exit_edge_id = purge.id
                 	WHERE dr.hops > 0
                 )
                 SELECT * FROM purge

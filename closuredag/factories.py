@@ -48,7 +48,8 @@ def edge_factory(vertex_model,
             abstract = not concrete
 
         def __str__(self):
-            return "{0} is child of {1}".format(self.child, self.parent)
+            # return "{0} is child of {1}".format(self.child, self.parent)
+            return "{0}".format(self.id)
         
         def save(self, *args, **kwargs):
             # if not kwargs.pop('disable_circular_check', False):

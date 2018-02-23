@@ -15,24 +15,22 @@ logger = logging.getLogger(__name__)
 def add_closure(sender, instance, created, **kwargs):
     if issubclass(sender, EdgeBase):
         logger.debug( "Post_save EdgeBase")
-        new = kwargs.get('new_edge')
-
+        
         # add additionnal attribute
         if created and instance.hops == 0 :    
             logger.debug("updating closure attribute")
-            logger.debug(instance.id)
             instance.entry_edge_id = instance.id
             instance.direct_edge_id = instance.id
             instance.exit_edge_id = instance.id
-            instance.save(new_edge=True)
             
-        # new edge
-        if not created and new:
-            logger.debug("adding closure edge")
+            # new closure edge
             add_closure_edge(instance, sender)
+            
+            instance.save()
+            
 
-        # update edge
-        if (not created or not new) and (instance.parent_has_changed() or instance.child_has_changed()):
+        # update closure edge
+        if created and (instance.parent_has_changed() or instance.child_has_changed()):
             logger.debug("updating closure edge")
             update_closure_edge(instance, sender) 
 

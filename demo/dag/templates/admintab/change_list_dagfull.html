@@ -1,7 +1,7 @@
 
 {% load static %}
 
-<svg id="graph" width=900>
+<svg id="graph2" width=900>
     <g/>
 </svg>
 
@@ -9,18 +9,18 @@
 
 
 document.addEventListener("DOMContentLoaded", function(event) { 
-    var G = {{ graph | safe }};
+    var G = {{ fullgraph | safe }};
     // Reload when tab change
-    document.getElementById('admintab2')
+    document.getElementById('admintab3')
         .addEventListener("change", function(e){
-            make_graph(G, "graph")
+            make_graph(G, "graph2")
         });
     
     // Reload when page reload (on filtering...)
-    var isChecked= document.getElementById('admintab2').checked;
+    var isChecked= document.getElementById('admintab3').checked;
     if(isChecked)
     {
-        make_graph(G, "graph")
+        make_graph(G, "graph2")
     }
 });
 </script>
