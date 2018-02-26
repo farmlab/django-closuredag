@@ -48,7 +48,7 @@ class VertexQuerySet(InheritanceQuerySet):
 
 
     def fullgraph(self):
-        nodes = self._root_model().objects.all().select_subclasses()   
+        nodes = self._root_model().objects.all()
         edges = self._through_model().objects.filter(etype="direct")
         
         G = {}
