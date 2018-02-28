@@ -6,11 +6,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 ENGINE = settings.DATABASES['default']['ENGINE']
-POSTGRES = 'django.db.backends.postgresql_psycopg2'
+POSTGRES = ['django.db.backends.postgresql_psycopg2'] #, 'django.contrib.gis.db.backends.postgis' ]
 MYSQL = ''
 
 def sql_to_add(table):
-    if ENGINE == POSTGRES:
+    if ENGINE in POSTGRES:
         from psycopg2 import sql
         return sql.SQL("""
             
@@ -37,7 +37,7 @@ def sql_to_add(table):
                 AND drB.parent_id = %(nodeTo)s;
                 """).format(sql.Identifier(table))
     else:
-        return None
+        raise NotImplementedError("'{}' support is not implementented".format(ENGINE)) 
 
 
 def add_closure_edge(instance, sender):
