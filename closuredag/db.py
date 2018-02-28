@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 ENGINE = settings.DATABASES['default']['ENGINE']
-POSTGRES = ['django.db.backends.postgresql_psycopg2'] #, 'django.contrib.gis.db.backends.postgis' ]
+POSTGRES = ['django.db.backends.postgresql_psycopg2', 'django.contrib.gis.db.backends.postgis' ]
 MYSQL = ''
 
 def sql_to_add(table):
@@ -52,11 +52,11 @@ def add_closure_edge(instance, sender):
         cursor = connection.cursor()
         cursor.execute(sql_str,param)
     except NotImplementedError as e:
-        logger.info("closure not supported with this engine ({0}), {1}".format(ENGINE, e))
+        logger.error(e)
 
 
 def sql_to_delete(table):
-    if ENGINE == POSTGRES: 
+    if ENGINE in POSTGRES: 
         from psycopg2 import sql
         return sql.SQL("""
             DELETE FROM {0} WHERE id IN ( 
@@ -76,7 +76,7 @@ def sql_to_delete(table):
                 )
             """).format(sql.Identifier(table))
     else:
-        return None
+        raise NotImplementedError("'{}' support is not implementented".format(ENGINE)) 
 
 
 def delete_closure_edge(instance, sender):
@@ -88,7 +88,7 @@ def delete_closure_edge(instance, sender):
         cursor = connection.cursor()
         cursor.execute(sql_str,param)
     except NotImplementedError as e:
-        logger.info("closure not supported with this engine ({0}), {1}".format(ENGINE, e))
+        logger.error(e)
 
 
 def update_closure_edge(instance, sender):
