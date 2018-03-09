@@ -1,6 +1,5 @@
 from django.db import models
 from closuredag.factories import vertex_factory, edge_factory
-from closuredag.models import VertexBase
 from django.core import urlresolvers
 
 

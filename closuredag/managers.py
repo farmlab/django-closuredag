@@ -15,7 +15,7 @@ DOT_PATH=TMP
 class VertexQuerySet(InheritanceQuerySet):
     
     def dot(self):
-        from graphviz import Digraph
+        # from graphviz import Digraph
         # check directory
         STMP = os.path.join('static',TMP)
         if not os.path.exists(STMP):
@@ -48,8 +48,9 @@ class VertexQuerySet(InheritanceQuerySet):
 
 
     def fullgraph(self):
-        nodes = self._root_model().objects.all()
-        edges = self._through_model().objects.filter(etype="direct")
+        nodes = self._root_model().objects.prefetch_related("parents", "children").all()
+        edges = self._through_model().objects.filter(etype="direct").select_related("parent",
+        "child")
         
         G = {}
         N = []
