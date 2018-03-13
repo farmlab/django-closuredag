@@ -88,11 +88,11 @@ def vertex_factory(edge_model, children_null=True, base_model=models.Model):
             abstract= True
 
         def direct_ancestors(self):
-            edges = edge_model.objects.filter(Q(child=self) & Q(etype="direct"))
+            edges = self.children.through.objects.filter(Q(child=self) & Q(etype="direct"))
             return self.objects.filter(vertex_child__in = edges)
         
         def direct_descandants(self):
-            edges = edge_model.objects.filter(Q(parent=self) & Q(etype="direct"))
+            edges = self.children.through.objects.filter(Q(parent=self) & Q(etype="direct"))
             return self.objects.filter(vertex_parent__in = edges)
         
     return Vertex
