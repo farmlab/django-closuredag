@@ -6,6 +6,7 @@ Directed Acyclic Graph structure.
 """
 
 from django.db import models
+from django.db.models import Q
 from django.core.exceptions import ValidationError 
 from django.db.models.fields.related import ManyToManyField
 from closuredag.exceptions import VertexNotReachableException
