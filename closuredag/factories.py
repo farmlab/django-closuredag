@@ -7,7 +7,6 @@ from django.db import connection
 from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q
 
 from closuredag.models import VertexBase, EdgeBase
 from closuredag.signals import add_closure_edge
