@@ -101,16 +101,20 @@ class VertexBase(ToDictMixin):
         """
         Returns a queryset of descendants
         """
-        return self.objects.filter(children=self).distinct()
+        if direct is True:
+            edges = self.children.through.objects.filter(Q(parent=self) & Q(etype="direct"))
+            return self.children.filter(vertex_parents__in=edges)
+        return self.children
 
-    def ancestors(self):
+    def ancestors(self, direct=False):
         """
         Returns a set of ancestors
         """
         if direct is True:
-            return self.objects.filter(parents=self).distinct()
-        return self.objects.filter(parents=self).distinct()
-
+            edges = self.children.through.objects.filter(Q(child=self) & Q(etype="direct"))
+            return self.parents.filter(vertex_childs__in=edges)
+        return self.parents
+  
     def descendants_edges_set(self, cached_results=None):
         """
         Returns a set of descendants edges
