@@ -97,38 +97,19 @@ class VertexBase(ToDictMixin):
             graph[f] = f.ancestors_graph()
         return graph
 
-    def descendants(self, cached_results=None):
+    def descendants(self, direct=False):
         """
         Returns a queryset of descendants
         """
         return self.objects.filter(children=self).distinct()
-        # if cached_results is None:
-            # cached_results = dict()
-        # if self in cached_results.keys():
-            # return cached_results[self]
-        # else:
-            # res = set()
-            # for f in self.children.all():
-                # res.add(f)
-                # res.update(f.descendants_set(cached_results=cached_results))
-            # cached_results[self] = res
-            # return res
 
-    def ancestors_set(self, cached_results=None):
+    def ancestors(self):
         """
         Returns a set of ancestors
         """
-        if cached_results is None:
-            cached_results = dict()
-        if self in cached_results.keys():
-            return cached_results[self]
-        else:
-            res = set()
-            for f in self.parents.all():
-                res.add(f)
-                res.update(f.ancestors_set(cached_results=cached_results))
-            cached_results[self] = res
-            return res
+        if direct is True:
+            return self.objects.filter(parents=self).distinct()
+        return self.objects.filter(parents=self).distinct()
 
     def descendants_edges_set(self, cached_results=None):
         """
@@ -170,8 +151,8 @@ class VertexBase(ToDictMixin):
         """
         vertices = set()
         vertices.add(self)
-        vertices.update(self.ancestors_set())
-        vertices.update(self.descendants_set())
+        vertices.update(self.ancestors())
+        vertices.update(self.descendants())
         return vertices
 
     def edges_set(self):
@@ -283,7 +264,7 @@ class VertexBase(ToDictMixin):
         """
         if parent == child:
             raise ValidationError('Self links are not allowed.')
-        if child in parent.ancestors_set():
+        if child in parent.ancestors():
             raise ValidationError('The object is an ancestor.')
 
 
@@ -292,21 +273,6 @@ class EdgeBase(ToDictMixin, models.Model):
     __old_parent_id = None
     #Closure attribute see: https://www.codeproject.com/Articles/22824/A-Model-to-Represent-Directed-Acyclic-Graphs-DAG-o?msg=2449056
     # NOTE: Working with foreign key is to heavy, in particular in the admin interface
-    # entry_edge = models.ForeignKey(
-        # 'self',
-        # related_name="entries_edges",
-        # on_delete=models.CASCADE,
-        # null=True, blank=True)
-    # direct_edge = models.ForeignKey(
-        # 'self',
-        # related_name="directs_edges",
-        # on_delete=models.CASCADE,
-        # null=True, blank=True)
-    # exit_edge = models.ForeignKey(
-        # 'self',
-        # related_name="exits_edges",
-        # on_delete=models.CASCADE,
-        # null=True, blank=True)
     entry_edge_id = models.IntegerField(null=True, blank=True)
     direct_edge_id = models.IntegerField(null=True, blank=True)
     exit_edge_id = models.IntegerField(null=True, blank=True)

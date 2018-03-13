@@ -7,6 +7,7 @@ from django.db import connection
 from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q
 
 from closuredag.models import VertexBase, EdgeBase
 from closuredag.signals import add_closure_edge
@@ -35,12 +36,14 @@ def edge_factory(vertex_model,
 
         parent = models.ForeignKey(
             vertex_model,
-            related_name="{0}_child".format(vertex_model_name),
+            related_name="vertex_childs",
+            # related_name="{0}_child".format(vertex_model_name),
             to_field=vertex_to_field, 
             on_delete=models.CASCADE)
         child = models.ForeignKey(
             vertex_model,
-            related_name="{0}_parent".format(vertex_model_name),
+            related_name="vertex_parents",
+            # related_name="{0}_parent".format(vertex_model_name),
             to_field=vertex_to_field,
             on_delete=models.CASCADE)
 
@@ -48,11 +51,9 @@ def edge_factory(vertex_model,
             abstract = not concrete
 
         def __str__(self):
-            # return "{0} is child of {1}".format(self.child, self.parent)
             return "{0}".format(self.id)
         
         def save(self, *args, **kwargs):
-            # if not kwargs.pop('disable_circular_check', False):
             self.parent.__class__.circular_checker(self.parent, self.child)
             super(Edge, self).save(*args, **kwargs)
 
@@ -86,4 +87,12 @@ def vertex_factory(edge_model, children_null=True, base_model=models.Model):
         class Meta:
             abstract= True
 
+        def direct_ancestors(self):
+            edges = edge_model.objects.filter(Q(child=self) & Q(etype="direct"))
+            return self.objects.filter(vertex_child__in = edges)
+        
+        def direct_descandants(self):
+            edges = edge_model.objects.filter(Q(parent=self) & Q(etype="direct"))
+            return self.objects.filter(vertex_parent__in = edges)
+        
     return Vertex
