@@ -105,7 +105,7 @@ class VertexBase(ToDictMixin):
         if direct is True:
             edges = self.children.through.objects.filter(Q(parent=self) & Q(etype="direct"))
             return self.children.filter(vertex_parents__in=edges)
-        return self.children
+        return self.children.all()
 
     def ancestors(self, direct=False):
         """
@@ -114,7 +114,7 @@ class VertexBase(ToDictMixin):
         if direct is True:
             edges = self.children.through.objects.filter(Q(child=self) & Q(etype="direct"))
             return self.parents.filter(vertex_childs__in=edges)
-        return self.parents
+        return self.parents.all()
   
     def descendants_edges_set(self, cached_results=None):
         """
