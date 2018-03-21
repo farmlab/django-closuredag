@@ -51,18 +51,21 @@ class NodeAdmin(AbsctractNodeAdmin, ChangeListAdmin):
     change_list_tab = [ 
             ("Table", "admintab/admin/change_list_base.html"),
             ("DAG", "admintab/change_list_dag.html"),
-            ("DAGFULL", "admintab/change_list_dagfull.html")
+            ("DAGFULL", "admintab/change_list_dagfull.html"),
+            ("DOT", "admintab/change_list_dot.html")
             ]
 
     
     def changelisttab(self, request, context):
         qs = context["cl"].queryset
         # draw graph
-        G = qs.fullgraph()
+        G = qs.graph()
         context["graph"] = json.dumps(G)
         
-        GF = qs.complete_graph()
+        GF = qs.fullgraph()
         context["fullgraph"] = json.dumps(GF)
+        
+        context["dot"] = qs.dot()
         
         # qs.dot()
         return request, context

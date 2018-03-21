@@ -1,12 +1,11 @@
 
 {% load static %}
 
-<svg id="graph2" width=900>
+<svg id="graph2" width=900 height=500>
     <g/>
 </svg>
 
 <script>
-
 
 document.addEventListener("DOMContentLoaded", function(event) { 
     var G = {{ fullgraph | safe }};

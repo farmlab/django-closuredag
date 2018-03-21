@@ -1,7 +1,7 @@
-
-svg#graph{
+svg#graph, svg#graph2{
     width: 100%;
-    /*background: #ddd;*/
+    background: #ddd;
+    height: 500px;
 }
 
 g.repro > rect {

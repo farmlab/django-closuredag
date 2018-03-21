@@ -15,36 +15,27 @@ DOT_PATH=TMP
 class VertexQuerySet(InheritanceQuerySet):
     
     def dot(self):
-        # from graphviz import Digraph
-        # check directory
-        STMP = os.path.join('static',TMP)
-        if not os.path.exists(STMP):
-            os.makedirs(STMP)
-        fpath = 'dotGraph.gv'
-        # data
-        ids = self._ids()
+        import pygraphviz as pgv
+        
         nodes = self._root_model().objects.filter(
-                Q(parents__in = ids ) | Q(children__in = ids) | Q(id__in = ids)
-                ).distinct().select_subclasses()
-        relations = self._through_model().objects.filter(
-                Q(child_id__in = nodes._ids() ) & Q(parent_id__in = nodes._ids())
+                Q(children__in = self) | Q(parents__in = self) | Q(id__in = self)
                 ).distinct()
+        edges = self._through_model().objects.filter(
+                Q(child_id__in = nodes._ids() ) & Q(parent_id__in = nodes._ids() ) & Q(etype = "direct"))
         
         # build graph
-        cls = self._model_name()
-        dot = Digraph()
+        
+        G = pgv.AGraph(directed=True,rankdir='LR')
+        G.node_attr['style']='rounded, filled'
         for n in nodes:
-            ncls = n.__class__.__name__.lower()
-            shp =  'box'  if cls == ncls else 'ellipse'
-            dot.node(str(n.id), str(n), shape=shp)
+            fillcolor = "#FBBE5E" if n in self else "#ACC280"
+            G.add_node(n.id, label=str(n), fillcolor=fillcolor, shape="box")
         
-        for e in relations:
-            lbl = str(e.id)
-            # sty =  'dotted'  if e.etype != 'direct' else 'line'
-            dot.edge(str(e.parent_id), str(e.child_id), label=lbl)
+        for e in edges:
+            G.add_edge(e.parent_id, e.child_id)
         
-        dot.render(fpath, STMP, view=True, cleanup=True)
-
+        # return G.draw(format="svg", prog="dot")
+        return G.string()
 
 
     def fullgraph(self):
@@ -69,7 +60,7 @@ class VertexQuerySet(InheritanceQuerySet):
         
         # vertices must be ancestor and descendant of any of the vertex
         nodes = self._root_model().objects.filter(
-                Q(children__in = self) & Q(parents__in = self) | Q(id__in = self)
+                Q(children__in = self) | Q(parents__in = self) | Q(id__in = self)
                 ).distinct()
 
         edges = self._through_model().objects.filter(
@@ -96,7 +87,12 @@ class VertexQuerySet(InheritanceQuerySet):
                 "direct")
                 )
         G = {}
-        G['nodes'] = [ n.to_dict() for n in self]
+        N = []
+        for n in self:
+            data = n.to_dict()
+            data["selected"] = True if n in self else False
+            N.append(data) 
+        G['nodes'] = N
         G['edges'] = [ e.to_dict() for e in edges]
         return G
     

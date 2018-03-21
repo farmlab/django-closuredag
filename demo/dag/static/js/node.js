@@ -2,7 +2,7 @@
 
 function make_graph(G, idDiv)
 {
-    var g = new dagreD3.graphlib.Graph().setGraph({});
+    var g = new dagreD3.graphlib.Graph().setGraph({rankdir:"LR"});
     unselectedN = "fill:#ddd; stroke:#ddd"
     //nodes
     G.nodes.forEach( function(n){
@@ -51,7 +51,7 @@ function make_graph(G, idDiv)
     // Run the renderer. This is what draws the final graph.
     render(inner, g);
     // Center the graph
-    var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-    inner.attr("transform", "translate(" + xCenterOffset + ", 20)");
-    svg.attr("height", g.graph().height + 40);
+    //var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+    //inner.attr("transform", "translate(" + xCenterOffset + ", 20)");
+    //svg.attr("height", g.graph().height + 40);
 }
