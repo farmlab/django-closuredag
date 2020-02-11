@@ -1,5 +1,5 @@
 bumpversion==0.5.3
 wheel==0.30.0
-sphinx==1.6.5
+sphinx==2.4.1
 django>=1.11
 
